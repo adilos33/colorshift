@@ -3,296 +3,225 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ColorShift AI</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<title>ColorShift</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
-:root {
-  --bg: #f5f0eb; --surface: #ffffff; --surface2: #f0ebe4;
-  --ink: #1a1410; --muted: #9a8f85; --accent: #e85d3a;
-  --accent2: #2d6a4f; --accent3: #6b4fbb;
-  --border: rgba(26,20,16,0.1); --r: 20px;
-  --shadow: 0 4px 24px rgba(26,20,16,0.08);
-}
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--ink); min-height:100vh; }
-header { background:var(--ink); padding:18px 32px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
-.brand { display:flex; align-items:center; gap:12px; }
-.brand-dot { width:38px; height:38px; border-radius:12px; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:20px; }
-.brand-name { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; color:#fff; }
-.brand-name span { color:var(--accent); }
-.header-tag { background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:rgba(255,255,255,0.7); font-size:12px; padding:4px 12px; border-radius:100px; }
-.layout { display:grid; grid-template-columns:320px 1fr; min-height:calc(100vh - 74px); }
-@media(max-width:800px){ .layout { grid-template-columns:1fr; } }
-.sidebar { background:var(--surface); border-right:1px solid var(--border); padding:24px 18px; overflow-y:auto; display:flex; flex-direction:column; gap:18px; }
-.panel { background:var(--surface2); border-radius:var(--r); padding:18px; border:1px solid var(--border); }
-.panel-title { font-family:'Syne',sans-serif; font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
-.color-item { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
-.color-item:last-child { margin-bottom:0; }
-.color-label { font-size:14px; font-weight:500; display:flex; align-items:center; gap:8px; }
-.color-controls { display:flex; align-items:center; gap:8px; }
-input[type=color] { width:36px; height:36px; border:2px solid var(--border); border-radius:10px; cursor:pointer; padding:2px; }
-.ctoggle { width:36px; height:36px; border-radius:10px; border:2px solid var(--border); background:var(--surface); cursor:pointer; font-size:14px; transition:all .2s; display:flex; align-items:center; justify-content:center; }
-.ctoggle.on { background:var(--ink); border-color:var(--ink); color:#fff; }
-.slider-wrap { margin-top:12px; }
-.slider-label { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-bottom:6px; }
-input[type=range] { width:100%; accent-color:var(--accent); cursor:pointer; }
-.prompt-area { width:100%; background:var(--surface); border:1.5px solid var(--border); border-radius:12px; padding:12px; font-family:'DM Sans',sans-serif; font-size:13px; color:var(--ink); resize:vertical; min-height:80px; outline:none; transition:border-color .2s; }
-.prompt-area:focus { border-color:var(--accent); }
-.btn { width:100%; padding:14px; border-radius:14px; border:none; font-family:'Syne',sans-serif; font-size:15px; font-weight:700; cursor:pointer; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:8px; }
-.btn:disabled { opacity:.4; cursor:not-allowed; }
-.btn-fire { background:var(--accent); color:#fff; box-shadow:0 6px 20px rgba(232,93,58,0.35); }
-.btn-fire:hover:not(:disabled) { transform:translateY(-1px); box-shadow:0 8px 28px rgba(232,93,58,0.5); }
-.btn-dark { background:var(--ink); color:#fff; }
-.btn-outline { background:transparent; border:2px solid var(--border); color:var(--ink); width:auto; padding:9px 16px; font-size:13px; }
-.btn-green { background:var(--accent2); color:#fff; }
-.stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
-.stat-card { background:var(--surface); border-radius:14px; padding:14px; border:1px solid var(--border); text-align:center; }
-.stat-num { font-family:'Syne',sans-serif; font-size:26px; font-weight:800; }
-.stat-num.o { color:var(--accent); } .stat-num.g { color:var(--accent2); } .stat-num.p { color:var(--accent3); }
-.stat-label { font-size:11px; color:var(--muted); margin-top:2px; }
-.main { padding:28px; overflow-y:auto; display:flex; flex-direction:column; gap:22px; }
-.upload-zone { border:2.5px dashed rgba(232,93,58,0.3); border-radius:28px; padding:56px 24px; text-align:center; background:radial-gradient(ellipse at 50% 0%, rgba(232,93,58,0.05) 0%, transparent 70%); transition:all .3s; cursor:pointer; }
-.upload-zone:hover, .upload-zone.drag { border-color:var(--accent); background:radial-gradient(ellipse at 50% 0%, rgba(232,93,58,0.1) 0%, transparent 70%); }
-.upload-zone.hidden { display:none; }
-.uz-icon { font-size:56px; display:block; margin-bottom:14px; animation:float 4s ease-in-out infinite; }
-.uz-title { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; margin-bottom:8px; }
-.uz-sub { color:var(--muted); font-size:14px; margin-bottom:24px; }
-label.ubtn { display:inline-flex; align-items:center; gap:8px; background:var(--ink); color:#fff; padding:13px 28px; border-radius:12px; font-family:'Syne',sans-serif; font-size:14px; font-weight:700; cursor:pointer; transition:all .2s; }
-label.ubtn:hover { background:#2d2520; transform:translateY(-1px); }
-input[type=file] { display:none; }
-.photos-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
-.photos-title { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; }
-.photos-title span { color:var(--accent); }
-.photo-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; }
-@media(max-width:500px){ .photo-grid { grid-template-columns:repeat(2,1fr); } }
-.photo-card { background:var(--surface); border-radius:16px; border:1.5px solid var(--border); overflow:hidden; transition:all .2s; position:relative; box-shadow:var(--shadow); }
-.photo-card:hover { transform:translateY(-3px); }
-.photo-card img { width:100%; aspect-ratio:1; object-fit:cover; display:block; }
-.photo-card-footer { padding:9px 11px; display:flex; align-items:center; justify-content:space-between; }
-.photo-name { font-size:11px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100px; }
-.photo-status { font-size:11px; font-weight:600; padding:3px 8px; border-radius:100px; }
-.sw { background:rgba(154,143,133,0.15); color:var(--muted); }
-.sp { background:rgba(232,93,58,0.12); color:var(--accent); }
-.sd { background:rgba(45,106,79,0.12); color:var(--accent2); }
-.se { background:rgba(220,50,50,0.12); color:#dc3232; }
-.photo-remove { position:absolute; top:8px; right:8px; width:26px; height:26px; border-radius:50%; background:rgba(26,20,16,0.6); color:#fff; border:none; cursor:pointer; font-size:11px; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .2s; }
-.photo-card:hover .photo-remove { opacity:1; }
-.dl-btn { position:absolute; bottom:42px; left:50%; transform:translateX(-50%); background:var(--accent); color:#fff; border:none; padding:7px 14px; border-radius:8px; cursor:pointer; font-family:'Syne',sans-serif; font-size:11px; font-weight:700; opacity:0; transition:opacity .2s; white-space:nowrap; z-index:5; }
-.photo-card:hover .dl-btn { opacity:1; }
-.proc-overlay { position:absolute; inset:0; background:rgba(255,255,255,0.88); display:none; align-items:center; justify-content:center; flex-direction:column; gap:8px; }
-.proc-overlay.show { display:flex; }
-.spinner { width:30px; height:30px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; }
-.prog-wrap { background:rgba(26,20,16,0.08); border-radius:100px; height:6px; overflow:hidden; margin-top:8px; }
-.prog-fill { height:100%; background:var(--accent); border-radius:100px; transition:width .3s; width:0%; }
-@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-@keyframes spin { to{transform:rotate(360deg)} }
-@keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-.anim { animation:fadeIn .4s ease both; }
+:root{--bg:#f5f0eb;--sur:#fff;--sur2:#f0ebe4;--ink:#1a1410;--mut:#9a8f85;--acc:#e85d3a;--grn:#2d6a4f;--brd:rgba(26,20,16,0.1);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;}
+header{background:var(--ink);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:99;}
+.logo{display:flex;align-items:center;gap:10px;}
+.lbox{width:34px;height:34px;border-radius:9px;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:17px;}
+.ltxt{font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:#fff;}
+.ltxt b{color:var(--acc);}
+.htag{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);font-size:11px;padding:3px 10px;border-radius:100px;}
+.wrap{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 62px);}
+@media(max-width:720px){.wrap{grid-template-columns:1fr;}}
+.side{background:var(--sur);border-right:1px solid var(--brd);padding:16px 13px;display:flex;flex-direction:column;gap:13px;overflow-y:auto;}
+.card{background:var(--sur2);border-radius:14px;padding:14px;border:1px solid var(--brd);}
+.ctit{font-family:'Syne',sans-serif;font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut);margin-bottom:11px;}
+.row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.row:last-child{margin-bottom:0;}
+.rl{font-size:13px;font-weight:500;}
+.rc{display:flex;align-items:center;gap:6px;}
+input[type=color]{width:30px;height:30px;border:2px solid var(--brd);border-radius:7px;cursor:pointer;padding:2px;}
+.tog{width:30px;height:30px;border-radius:7px;border:2px solid var(--brd);background:var(--sur);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;transition:all .15s;user-select:none;}
+.tog.on{background:var(--ink);border-color:var(--ink);color:#fff;}
+.slw{margin-top:9px;}
+.slh{display:flex;justify-content:space-between;font-size:11px;color:var(--mut);margin-bottom:4px;}
+input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;}
+.pg{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.pb{background:var(--sur);border:1.5px solid var(--brd);border-radius:7px;padding:7px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;}
+.pb:hover{border-color:var(--acc);color:var(--acc);}
+.btn{width:100%;padding:12px;border-radius:11px;border:none;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .2s;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.bf{background:var(--acc);color:#fff;box-shadow:0 4px 14px rgba(232,93,58,0.35);}
+.bf:hover:not(:disabled){transform:translateY(-1px);}
+.bk{background:var(--ink);color:#fff;}
+.sts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.sb{background:var(--sur);border:1px solid var(--brd);border-radius:11px;padding:9px;text-align:center;}
+.sn{font-family:'Syne',sans-serif;font-size:21px;font-weight:800;}
+.sn.o{color:var(--acc);}.sn.g{color:var(--grn);}.sn.p{color:#6b4fbb;}
+.sl2{font-size:10px;color:var(--mut);}
+.main{padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:16px;}
+.uz{border:2px dashed rgba(232,93,58,0.25);border-radius:22px;padding:46px 20px;text-align:center;transition:all .3s;}
+.uz:hover,.uz.drag{border-color:var(--acc);}
+.uz.hide{display:none;}
+.uze{font-size:48px;display:block;margin-bottom:11px;animation:fl 4s ease-in-out infinite;}
+.uzt{font-family:'Syne',sans-serif;font-size:19px;font-weight:800;margin-bottom:7px;}
+.uzs{color:var(--mut);font-size:13px;margin-bottom:17px;}
+label.ub{display:inline-flex;align-items:center;gap:7px;background:var(--ink);color:#fff;padding:10px 20px;border-radius:9px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+input[type=file]{display:none;}
+.sh{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.stt{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;}
+.stt span{color:var(--acc);}
+.sac{display:flex;gap:6px;}
+.mb{background:var(--sur);border:1.5px solid var(--brd);border-radius:8px;padding:6px 11px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;cursor:pointer;}
+.pgb{background:rgba(26,20,16,0.08);border-radius:100px;height:5px;overflow:hidden;margin-top:7px;}
+.pgfill{height:100%;background:var(--acc);border-radius:100px;transition:width .25s;width:0%;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:11px;}
+@media(max-width:480px){.grid{grid-template-columns:repeat(2,1fr);}}
+.pc{background:var(--sur);border-radius:12px;border:1.5px solid var(--brd);overflow:hidden;transition:transform .2s;position:relative;}
+.pc:hover{transform:translateY(-3px);}
+.pc img{width:100%;aspect-ratio:1;object-fit:cover;display:block;}
+.pcf{padding:6px 8px;display:flex;align-items:center;justify-content:space-between;}
+.pn{font-size:10px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px;}
+.pst{font-size:9px;font-weight:700;padding:2px 6px;border-radius:100px;}
+.stw{background:rgba(154,143,133,0.15);color:var(--mut);}
+.std{background:rgba(45,106,79,0.12);color:var(--grn);}
+.stp{background:rgba(232,93,58,0.12);color:var(--acc);}
+.prm{position:absolute;top:5px;right:5px;width:20px;height:20px;border-radius:50%;background:rgba(26,20,16,0.65);color:#fff;border:none;cursor:pointer;font-size:9px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;}
+.pc:hover .prm{opacity:1;}
+.pdlb{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);background:var(--acc);color:#fff;border:none;padding:4px 10px;border-radius:5px;cursor:pointer;font-family:'Syne',sans-serif;font-size:9px;font-weight:700;opacity:0;transition:opacity .15s;white-space:nowrap;z-index:5;}
+.pc:hover .pdlb{opacity:1;}
+.cbb{position:absolute;top:5px;left:5px;background:rgba(26,20,16,0.65);color:#fff;border:none;padding:2px 6px;border-radius:4px;font-size:9px;cursor:pointer;opacity:0;transition:opacity .15s;z-index:5;}
+.pc:hover .cbb{opacity:1;}
+.pov{position:absolute;inset:0;background:rgba(255,255,255,0.85);display:none;align-items:center;justify-content:center;}
+.pov.show{display:flex;}
+.spin{width:24px;height:24px;border:3px solid var(--brd);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 <header>
-  <div class="brand">
-    <div class="brand-dot">🎨</div>
-    <div class="brand-name">Color<span>Shift</span> AI</div>
-  </div>
-  <span class="header-tag">Powered by Claude AI — Free</span>
+  <div class="logo"><div class="lbox">🎨</div><div class="ltxt">Color<b>Shift</b></div></div>
+  <span class="htag">Free • No API • Offline</span>
 </header>
-<div class="layout">
-  <aside class="sidebar">
-    <div class="panel">
-      <div class="panel-title">🎨 Color Settings</div>
-      <div class="color-item">
-        <div class="color-label">👕 Clothes</div>
-        <div class="color-controls">
-          <input type="color" id="clothesColor" value="#e63946">
-          <div class="ctoggle on" id="clothesToggle" onclick="toggle('clothes')">✓</div>
-        </div>
-      </div>
-      <div class="color-item">
-        <div class="color-label">🧴 Skin Tone</div>
-        <div class="color-controls">
-          <input type="color" id="skinColor" value="#c68642">
-          <div class="ctoggle on" id="skinToggle" onclick="toggle('skin')">✓</div>
-        </div>
-      </div>
-      <div class="color-item">
-        <div class="color-label">🖼️ Background</div>
-        <div class="color-controls">
-          <input type="color" id="bgColor" value="#457b9d">
-          <div class="ctoggle on" id="bgToggle" onclick="toggle('bg')">✓</div>
-        </div>
-      </div>
-      <div class="slider-wrap">
-        <div class="slider-label"><span>Intensity</span><span id="intVal">80%</span></div>
-        <input type="range" id="intensity" min="1" max="100" value="80" oninput="document.getElementById('intVal').textContent=this.value+'%'">
+<div class="wrap">
+  <aside class="side">
+    <div class="card">
+      <div class="ctit">Color Controls</div>
+      <div class="row"><div class="rl">👕 Clothes</div><div class="rc"><input type="color" id="cC" value="#e63946"><div class="tog on" id="tC" onclick="tog('tC')">ON</div></div></div>
+      <div class="row"><div class="rl">🧴 Skin Tone</div><div class="rc"><input type="color" id="cS" value="#c68642"><div class="tog on" id="tS" onclick="tog('tS')">ON</div></div></div>
+      <div class="row"><div class="rl">🖼️ Background</div><div class="rc"><input type="color" id="cB" value="#457b9d"><div class="tog on" id="tB" onclick="tog('tB')">ON</div></div></div>
+      <div class="slw"><div class="slh"><span>Intensity</span><span id="iv">70%</span></div><input type="range" id="int" min="5" max="100" value="70" oninput="document.getElementById('iv').textContent=this.value+'%'"></div>
+    </div>
+    <div class="card">
+      <div class="ctit">Quick Presets</div>
+      <div class="pg">
+        <div class="pb" onclick="run('hue-rotate(10deg) saturate(1.3) brightness(1.08)')">🌅 Warm</div>
+        <div class="pb" onclick="run('hue-rotate(-15deg) saturate(0.85) brightness(1.02)')">❄️ Cool</div>
+        <div class="pb" onclick="run('saturate(1.9) brightness(1.05) contrast(1.1)')">🌈 Vibrant</div>
+        <div class="pb" onclick="run('hue-rotate(8deg) saturate(0.65) brightness(1.1)')">📷 Vintage</div>
+        <div class="pb" onclick="run('saturate(0) brightness(1.05) contrast(1.15)')">⬛ B&W</div>
+        <div class="pb" onclick="run('saturate(1.15) brightness(0.9) contrast(1.45)')">🎭 Dramatic</div>
       </div>
     </div>
-    <div class="panel">
-      <div class="panel-title">✏️ Custom Instructions (optional)</div>
-      <textarea class="prompt-area" id="customPrompt" placeholder="e.g. Make the dress red, warm golden skin, soft blue background..."></textarea>
-    </div>
-    <button class="btn btn-fire" id="processBtn" onclick="processAll()" disabled>🚀 Process All Photos</button>
-    <button class="btn btn-dark" onclick="downloadAll()" id="downloadBtn" style="display:none">⬇️ Download All (ZIP)</button>
-    <div class="stats" id="statsPanel" style="display:none">
-      <div class="stat-card"><div class="stat-num o" id="sTotal">0</div><div class="stat-label">Total</div></div>
-      <div class="stat-card"><div class="stat-num g" id="sDone">0</div><div class="stat-label">Done</div></div>
-      <div class="stat-card"><div class="stat-num p" id="sLeft">0</div><div class="stat-label">Left</div></div>
+    <button class="btn bf" id="runBtn" onclick="run(null)" disabled>🚀 Apply to All Photos</button>
+    <button class="btn bk" id="dlBtn" onclick="dlAll()" style="display:none">⬇️ Download All (ZIP)</button>
+    <div class="sts" id="stsBox" style="display:none">
+      <div class="sb"><div class="sn o" id="sT">0</div><div class="sl2">Total</div></div>
+      <div class="sb"><div class="sn g" id="sD">0</div><div class="sl2">Done</div></div>
+      <div class="sb"><div class="sn p" id="sL">0</div><div class="sl2">Left</div></div>
     </div>
   </aside>
   <main class="main">
-    <div class="upload-zone anim" id="uploadZone">
-      <span class="uz-icon">🖼️</span>
-      <div class="uz-title">Drop your photos here</div>
-      <div class="uz-sub">Upload 20+ photos — AI changes clothes, skin & background colors</div>
-      <label class="ubtn" for="fileInput">📂 Choose Photos</label>
-      <input type="file" id="fileInput" accept="image/*" multiple>
+    <div class="uz" id="uz">
+      <span class="uze">🖼️</span>
+      <div class="uzt">Drop your photos here</div>
+      <div class="uzs">Upload 20+ photos. Changes clothes, skin and background colors instantly. No API needed!</div>
+      <label class="ub" for="fi">📂 Choose Photos</label>
+      <input type="file" id="fi" accept="image/*" multiple>
     </div>
-    <div id="photosSection" style="display:none" class="anim">
-      <div class="photos-header">
-        <div class="photos-title"><span id="photoCount">0</span> Photos Ready</div>
-        <div style="display:flex;gap:10px">
-          <label class="btn-outline btn" for="fileInput" style="cursor:pointer;font-family:Syne,sans-serif;font-weight:700;font-size:13px">+ Add More</label>
-          <button class="btn-outline btn" style="cursor:pointer;font-family:Syne,sans-serif;font-weight:700;font-size:13px" onclick="clearAll()">🗑 Clear</button>
+    <div id="sec" style="display:none">
+      <div class="sh">
+        <div class="stt"><span id="cnt">0</span> Photos Ready</div>
+        <div class="sac">
+          <label class="mb" for="fi" style="cursor:pointer">+ Add More</label>
+          <button class="mb" onclick="clr()">Clear All</button>
         </div>
       </div>
-      <div id="progressWrap" style="display:none;margin-top:8px">
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
-          <span id="progLabel">Processing...</span><span id="progPct">0%</span>
-        </div>
-        <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+      <div id="pgw" style="display:none;margin-top:8px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span id="pl">Processing...</span><span id="pp">0%</span></div>
+        <div class="pgb"><div class="pgfill" id="pgfill"></div></div>
       </div>
-      <div class="photo-grid" id="photoGrid"></div>
+      <div class="grid" id="grid"></div>
     </div>
   </main>
 </div>
+<canvas id="cvs" style="display:none"></canvas>
 <script>
-let photos=[], busy=false;
-document.getElementById('fileInput').onchange=e=>{addFiles(Array.from(e.target.files));e.target.value='';};
-const zone=document.getElementById('uploadZone');
-['dragenter','dragover'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.add('drag');}));
-['dragleave','drop'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.remove('drag');}));
-zone.addEventListener('drop',e=>addFiles(Array.from(e.dataTransfer.files).filter(f=>f.type.startsWith('image/'))));
-function addFiles(files){files.forEach(f=>{const r=new FileReader();r.onload=e=>{photos.push({file:f,name:f.name,dataURL:e.target.result,status:'wait',result:null});render();};r.readAsDataURL(f);});}
-function render(){
-  zone.classList.add('hidden');
-  document.getElementById('photosSection').style.display='block';
-  document.getElementById('photoCount').textContent=photos.length;
-  document.getElementById('processBtn').disabled=photos.length===0||busy;
-  document.getElementById('statsPanel').style.display=photos.length?'grid':'none';
-  document.getElementById('sTotal').textContent=photos.length;
-  document.getElementById('sDone').textContent=photos.filter(p=>p.status==='done').length;
-  document.getElementById('sLeft').textContent=photos.filter(p=>p.status==='wait'||p.status==='proc').length;
-  document.getElementById('downloadBtn').style.display=photos.some(p=>p.status==='done')?'flex':'none';
-  const g=document.getElementById('photoGrid');g.innerHTML='';
-  photos.forEach((p,i)=>{
-    const sc={wait:'sw',proc:'sp',done:'sd',err:'se'}[p.status];
-    const st={wait:'Waiting',proc:'Processing...',done:'Done ✓',err:'Error'}[p.status];
-    const c=document.createElement('div');c.className='photo-card';
-    c.innerHTML=`<img src="${p.result||p.dataURL}" alt=""><button class="photo-remove" onclick="rm(${i})">✕</button><div class="photo-card-footer"><span class="photo-name">${p.name}</span><span class="photo-status ${sc}">${st}</span></div><div class="proc-overlay${p.status==='proc'?' show':''}"><div class="spinner"></div><span style="font-size:11px;color:var(--muted)">AI Working...</span></div>`;
-    if(p.result){const b=document.createElement('button');b.className='dl-btn';b.textContent='⬇️ Download';b.onclick=()=>dl(p,i);c.appendChild(b);}
-    g.appendChild(c);
+var P=[],busy=false;
+document.getElementById('fi').onchange=function(e){addF(Array.from(e.target.files));e.target.value='';};
+var uz=document.getElementById('uz');
+uz.addEventListener('dragover',function(e){e.preventDefault();uz.classList.add('drag');});
+uz.addEventListener('dragleave',function(){uz.classList.remove('drag');});
+uz.addEventListener('drop',function(e){e.preventDefault();uz.classList.remove('drag');addF(Array.from(e.dataTransfer.files).filter(function(f){return f.type.startsWith('image/');}));});
+function addF(files){files.forEach(function(f){var r=new FileReader();r.onload=function(e){P.push({name:f.name,orig:e.target.result,res:null,st:'w'});draw();};r.readAsDataURL(f);});}
+function draw(){
+  uz.classList.add('hide');document.getElementById('sec').style.display='block';
+  document.getElementById('cnt').textContent=P.length;
+  document.getElementById('runBtn').disabled=!P.length||busy;
+  document.getElementById('stsBox').style.display=P.length?'grid':'none';
+  document.getElementById('sT').textContent=P.length;
+  document.getElementById('sD').textContent=P.filter(function(p){return p.st==='d';}).length;
+  document.getElementById('sL').textContent=P.filter(function(p){return p.st==='w';}).length;
+  document.getElementById('dlBtn').style.display=P.some(function(p){return p.st==='d';})?'flex':'none';
+  var g=document.getElementById('grid');g.innerHTML='';
+  P.forEach(function(p,i){
+    var sc={w:'stw',d:'std',p:'stp'}[p.st]||'stw';
+    var st={w:'Waiting',d:'Done ✓',p:'...'}[p.st];
+    var el=document.createElement('div');el.className='pc';
+    el.innerHTML='<img id="im'+i+'" src="'+(p.res||p.orig)+'"><button class="prm" onclick="rm('+i+')">X</button><div class="pcf"><span class="pn">'+p.name+'</span><span class="pst '+sc+'">'+st+'</span></div><div class="pov'+(p.st==='p'?' show':'')+'" id="ov'+i+'"><div class="spin"></div></div>';
+    if(p.res){
+      var b=document.createElement('button');b.className='pdlb';b.textContent='Save';
+      b.onclick=(function(pp){return function(){dl1(pp);};})(p);el.appendChild(b);
+      var c=document.createElement('button');c.className='cbb';c.textContent='Before';
+      (function(idx,pp){c.onmouseenter=function(){document.getElementById('im'+idx).src=pp.orig;};c.onmouseleave=function(){document.getElementById('im'+idx).src=pp.res;};})(i,p);
+      el.appendChild(c);
+    }
+    g.appendChild(el);
   });
 }
-function rm(i){photos.splice(i,1);if(!photos.length){zone.classList.remove('hidden');document.getElementById('photosSection').style.display='none';}else render();}
-function clearAll(){photos=[];zone.classList.remove('hidden');document.getElementById('photosSection').style.display='none';document.getElementById('processBtn').disabled=true;}
-function toggle(t){const b=document.getElementById(t+'Toggle');b.classList.toggle('on');b.textContent=b.classList.contains('on')?'✓':'○';}
-function isOn(t){return document.getElementById(t+'Toggle').classList.contains('on');}
-function buildFilter(){
-  const c=document.getElementById('clothesColor').value;
-  const s=document.getElementById('skinColor').value;
-  const b=document.getElementById('bgColor').value;
-  const int=parseInt(document.getElementById('intensity').value)/100;
-  // Build CSS filter based on selected colors
-  let hue=0, sat=1, bright=1;
-  if(isOn('clothes')){const rgb=hexToHsl(c);hue=rgb[0];sat=0.8+int*0.7;bright=0.9+int*0.2;}
-  if(isOn('skin')){bright=bright*(0.9+int*0.15);}
-  const filters=[];
-  if(hue!==0) filters.push(`hue-rotate(${Math.round(hue)}deg)`);
-  filters.push(`saturate(${sat.toFixed(2)})`);
-  filters.push(`brightness(${bright.toFixed(2)})`);
-  if(isOn('bg')) filters.push(`contrast(${0.9+int*0.15})`);
-  return filters.join(' ');
+function rm(i){P.splice(i,1);if(!P.length){uz.classList.remove('hide');document.getElementById('sec').style.display='none';}else draw();}
+function clr(){P=[];uz.classList.remove('hide');document.getElementById('sec').style.display='none';}
+function tog(id){var el=document.getElementById(id);el.classList.toggle('on');el.textContent=el.classList.contains('on')?'ON':'OFF';}
+function isOn(id){return document.getElementById(id).classList.contains('on');}
+function mkF(){
+  var v=parseInt(document.getElementById('int').value)/100;
+  var hue=0,sat=1,bri=1,con=1;
+  if(isOn('tC')){hue+=hx2h(document.getElementById('cC').value)*v*0.4;sat+=v*0.5;}
+  if(isOn('tS')){bri+=v*0.1;sat=Math.max(sat,1+v*0.2);}
+  if(isOn('tB')){con+=v*0.12;}
+  return 'hue-rotate('+Math.round(hue)+'deg) saturate('+sat.toFixed(2)+') brightness('+bri.toFixed(2)+') contrast('+con.toFixed(2)+')';
 }
-function hexToHsl(hex){
-  let r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255;
-  const max=Math.max(r,g,b),min=Math.min(r,g,b);let h=0;
-  if(max!==min){if(max===r)h=((g-b)/(max-min))%6;else if(max===g)h=(b-r)/(max-min)+2;else h=(r-g)/(max-min)+4;h=Math.round(h*60);if(h<0)h+=360;}
-  return [h,(max-min)*100,(max+min)/2*100];
+function hx2h(hex){
+  var r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255;
+  var mx=Math.max(r,g,b),mn=Math.min(r,g,b),h=0;
+  if(mx!==mn){if(mx===r)h=((g-b)/(mx-mn))%6;else if(mx===g)h=(b-r)/(mx-mn)+2;else h=(r-g)/(mx-mn)+4;h=Math.round(h*60);if(h<0)h+=360;}
+  return h;
 }
-async function processAll(){
-  if(busy)return; busy=true;
-  document.getElementById('processBtn').disabled=true;
-  document.getElementById('progressWrap').style.display='block';
-  const prompt=buildPrompt();
-  let done=0;
-  for(let i=0;i<photos.length;i++){
-    if(photos[i].status==='done'){done++;continue;}
-    photos[i].status='proc';render();
-    try{
-      const result=await processOne(photos[i],prompt);
-      photos[i].result=result;photos[i].status='done';
-    }catch(e){photos[i].status='err';console.error(e);}
-    done++;
-    const pct=Math.round((done/photos.length)*100);
-    document.getElementById('progFill').style.width=pct+'%';
-    document.getElementById('progPct').textContent=pct+'%';
-    document.getElementById('progLabel').textContent=`Processing ${done} of ${photos.length}...`;
-    render();
-  }
-  busy=false;
-  document.getElementById('processBtn').disabled=false;
-  document.getElementById('progLabel').textContent='✅ All done!';
+function run(pf){
+  if(busy)return;busy=true;
+  document.getElementById('runBtn').disabled=true;document.getElementById('pgw').style.display='block';
+  var filter=pf||mkF();var cvs=document.getElementById('cvs');var ctx=cvs.getContext('2d');var i=0;
+  function nx(){
+    if(i>=P.length){busy=false;document.getElementById('runBtn').disabled=false;document.getElementById('pl').textContent='All done!';return;}
+    if(P[i].st==='d'){i++;nx();return;}
+    P[i].st='p';draw();
+    var img=new Image();var idx=i;
+    img.onload=function(){
+      cvs.width=img.width;cvs.height=img.height;ctx.clearRect(0,0,cvs.width,cvs.height);ctx.filter=filter;ctx.drawImage(img,0,0);
+      P[idx].res=cvs.toDataURL('image/jpeg',0.93);P[idx].st='d';
+      var pct=Math.round(((idx+1)/P.length)*100);
+      document.getElementById('pgfill').style.width=pct+'%';document.getElementById('pp').textContent=pct+'%';
+      document.getElementById('pl').textContent='Processing '+(idx+1)+' of '+P.length+'...';
+      draw();i++;nx();
+    };img.src=P[idx].orig;
+  }nx();
 }
-function buildPrompt(){
-  const custom=document.getElementById('customPrompt').value.trim();
-  if(custom)return custom;
-  const parts=[];
-  if(isOn('clothes'))parts.push(`clothes color to ${document.getElementById('clothesColor').value}`);
-  if(isOn('skin'))parts.push(`skin/face tone to ${document.getElementById('skinColor').value}`);
-  if(isOn('bg'))parts.push(`background color to ${document.getElementById('bgColor').value}`);
-  return `Change: ${parts.join(', ')}. Intensity: ${document.getElementById('intensity').value}%. Return ONLY JSON: {"css_filter":"hue-rotate(Xdeg) saturate(X) brightness(X) contrast(X)"}`;
-}
-async function processOne(photo,prompt){
-  const b64=photo.dataURL.split(',')[1];
-  const mt=photo.file.type||'image/jpeg';
-  const res=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      model:'claude-sonnet-4-20250514',max_tokens:200,
-      messages:[{role:'user',content:[
-        {type:'image',source:{type:'base64',media_type:mt,data:b64}},
-        {type:'text',text:prompt+'\n\nAnalyze the image colors and return ONLY a JSON object with a css_filter string that best approximates the requested color changes. Example: {"css_filter":"hue-rotate(120deg) saturate(1.4) brightness(1.05)"}. No other text.'}
-      ]}]
-    })
+function dl1(p){var a=document.createElement('a');a.href=p.res;a.download='colorshift_'+p.name;a.click();}
+function dlAll(){
+  var done=P.filter(function(p){return p.st==='d';});if(!done.length)return;
+  var btn=document.getElementById('dlBtn');btn.textContent='Zipping...';btn.disabled=true;
+  var zip=new JSZip(),folder=zip.folder('colorshift');
+  done.forEach(function(p){folder.file('colorshift_'+p.name,p.res.split(',')[1],{base64:true});});
+  zip.generateAsync({type:'blob'}).then(function(blob){
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='colorshift_results.zip';a.click();
+    btn.textContent='Download All (ZIP)';btn.disabled=false;
   });
-  const data=await res.json();
-  const txt=data.content?.[0]?.text||'{}';
-  let parsed={};
-  try{parsed=JSON.parse(txt.replace(/```json|```/g,'').trim());}catch(e){parsed={css_filter:buildFilter()};}
-  return applyCSS(photo.dataURL,parsed.css_filter||buildFilter());
-}
-function applyCSS(src,filter){
-  return new Promise(res=>{
-    const img=new Image();
-    img.onload=()=>{
-      const c=document.createElement('canvas');c.width=img.width;c.height=img.height;
-      const ctx=c.getContext('2d');ctx.filter=filter;ctx.drawImage(img,0,0);
-      res(c.toDataURL('image/jpeg',0.92));
-    };img.src=src;
-  });
-}
-function dl(p){const a=document.createElement('a');a.href=p.result;a.download='colorshift_'+p.name;a.click();}
-async function downloadAll(){
-  const done=photos.filter(p=>p.status==='done');if(!done.length)return;
-  const btn=document.getElementById('downloadBtn');btn.textContent='⏳ Zipping...';btn.disabled=true;
-  const zip=new JSZip(),folder=zip.folder('colorshift');
-  done.forEach(p=>folder.file('colorshift_'+p.name,p.result.split(',')[1],{base64:true}));
-  const blob=await zip.generateAsync({type:'blob'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='colorshift_results.zip';a.click();
-  btn.textContent='⬇️ Download All (ZIP)';btn.disabled=false;
 }
 </script>
 </body>
